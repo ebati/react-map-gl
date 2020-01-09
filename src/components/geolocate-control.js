@@ -125,6 +125,20 @@ export default class GeolocateControl extends BaseControl<
     }
   }
 
+  _isOutOfMapMaxBounds = (position: Position) => {
+    const {map} = this._context;
+    const bounds = map.getMaxBounds();
+    const coordinates = position.coords;
+
+    return (
+      bounds &&
+      (coordinates.longitude < bounds.getWest() ||
+        coordinates.longitude > bounds.getEast() ||
+        coordinates.latitude < bounds.getSouth() ||
+        coordinates.latitude > bounds.getNorth())
+    );
+  };
+
   _setupMapboxGeolocateControl = (supportsGeolocation: boolean) => {
     if (!supportsGeolocation) {
       /* eslint-disable no-console, no-undef */
@@ -164,6 +178,7 @@ export default class GeolocateControl extends BaseControl<
     // replace mapbox internal methods
     this._mapboxGeolocateControl._updateMarker = this._updateMarker;
     this._mapboxGeolocateControl._updateCamera = this._updateCamera;
+    this._mapboxGeolocateControl._isOutOfMapMaxBounds = this._isOutOfMapMaxBounds;
 
     this._mapboxGeolocateControl._setup = true;
 
@@ -208,7 +223,10 @@ export default class GeolocateControl extends BaseControl<
     const radius = position.coords.accuracy;
     const bounds = center.toBounds(radius);
 
-    return [[bounds._ne.lng, bounds._ne.lat], [bounds._sw.lng, bounds._sw.lat]];
+    return [
+      [bounds._ne.lng, bounds._ne.lat],
+      [bounds._sw.lng, bounds._sw.lat]
+    ];
   };
 
   _updateCamera = (position: Position) => {
